@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR Code Decoder - QRCraft</title>
+<meta name="description" content="Free QR code decoder. Upload or paste an image to read QR codes instantly.">
+<meta property="og:title" content="QR Code Decoder - QRCraft">
+<link rel="canonical" href="https://rorojiao.github.io/qrcraft/decode.html">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="4" height="4" rx="0.5"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>
+    <span data-i18n="brand">QRCraft</span>
+  </a>
+  <nav>
+    <a href="index.html" data-i18n="home">Home</a>
+    <a href="generate.html" data-i18n="generate">Generate</a>
+    <a href="decode.html" class="active" data-i18n="decode">Decode</a>
+    <a href="wifi.html" data-i18n="wifi">WiFi QR</a>
+    <div class="lang-switch">
+      <button data-lang="en">EN</button>
+      <button data-lang="zh">中</button>
+      <button data-lang="ja">日</button>
+    </div>
+  </nav>
+</header>
+<main>
+  <h1 data-i18n="decPageTitle">QR Code Decoder</h1>
+  <p class="subtitle" data-i18n="decDesc">Upload or paste an image to read QR codes</p>
+  <div class="card">
+    <div class="drop-zone" id="drop-zone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48" style="margin-bottom:12px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p data-i18n="dropText">Drop image here or click to upload</p>
+      <p style="margin-top:8px;font-size:.8rem" data-i18n="pasteHint">You can also paste an image (Ctrl+V)</p>
+      <input type="file" id="file-input" accept="image/*">
+    </div>
+  </div>
+  <div id="decode-result"></div>
+</main>
+<footer>
+  <div class="tip-box">
+    <span data-i18n="footerTip">Tip: </span>
+    <a href="https://etherscan.io/address/0xEeD903787Cb86bcCc17777E5C7d10A4c2De43823" target="_blank" data-i18n="tipAddr">Support QRCraft</a>
+    <br><code>0xEeD903787Cb86bcCc17777E5C7d10A4c2De43823</code>
+  </div>
+  <p style="margin-top:12px" data-i18n="footerCopy">© 2026 QRCraft.</p>
+</footer>
+<script src="jsqr.js"></script>
+<script src="i18n.js"></script>
+<script>
+const dropZone=document.getElementById('drop-zone');
+const fileInput=document.getElementById('file-input');
+const resultDiv=document.getElementById('decode-result');
+
+dropZone.addEventListener('click',()=>fileInput.click());
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover')});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');if(e.dataTransfer.files.length)decodeFile(e.dataTransfer.files[0])});
+fileInput.addEventListener('change',e=>{if(e.target.files.length)decodeFile(e.target.files[0])});
+
+document.addEventListener('paste',e=>{
+  const items=e.clipboardData?.items;
+  if(!items)return;
+  for(const item of items){
+    if(item.type.startsWith('image/')){decodeFile(item.getAsFile());break}}
+});
+
+function decodeFile(file){
+  const img=new Image();
+  img.onload=()=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=img.width;canvas.height=img.height;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0);
+    const imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(imageData.data,canvas.width,canvas.height);
+    if(code){
+      resultDiv.innerHTML=`<div class="card"><h3>${t('resultLabel')}</h3><p style="font-size:1.1rem;margin-top:8px;word-break:break-all">${escHtml(code.data)}</p>${isURL(code.data)?`<p style="margin-top:8px"><a href="${escHtml(code.data)}" target="_blank" rel="noopener">${escHtml(code.data)}</a></p>`:''}</div>`;
+    }else{
+      resultDiv.innerHTML=`<div class="card"><p style="color:var(--muted)">${t('noQR')}</p></div>`;
+    }
+  };
+  img.src=URL.createObjectURL(file);
+}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function isURL(s){try{new URL(s);return s.startsWith('http')}catch{return false}}
+</script>
+</body>
+</html>

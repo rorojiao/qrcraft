@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR Code Generator - QRCraft</title>
+<meta name="description" content="Free QR code generator. Create QR codes for URLs, text, and more with custom colors.">
+<meta property="og:title" content="QR Code Generator - QRCraft">
+<meta property="og:description" content="Create QR codes instantly with custom colors. Free, no signup.">
+<link rel="canonical" href="https://rorojiao.github.io/qrcraft/generate.html">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="4" height="4" rx="0.5"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>
+    <span data-i18n="brand">QRCraft</span>
+  </a>
+  <nav>
+    <a href="index.html" data-i18n="home">Home</a>
+    <a href="generate.html" class="active" data-i18n="generate">Generate</a>
+    <a href="decode.html" data-i18n="decode">Decode</a>
+    <a href="wifi.html" data-i18n="wifi">WiFi QR</a>
+    <div class="lang-switch">
+      <button data-lang="en">EN</button>
+      <button data-lang="zh">中</button>
+      <button data-lang="ja">日</button>
+    </div>
+  </nav>
+</header>
+<main>
+  <h1 data-i18n="genPageTitle">QR Code Generator</h1>
+  <p class="subtitle" data-i18n="genDesc">Create QR codes for URLs, text, contacts and more</p>
+  <div class="card">
+    <div class="form-group">
+      <label data-i18n="inputLabel">Text or URL</label>
+      <textarea id="qr-input" rows="3" data-i18n="inputPlaceholder" placeholder="Enter text, URL, or any data…"></textarea>
+    </div>
+    <div class="color-row">
+      <div class="form-group">
+        <label data-i18n="fgColor">Foreground</label>
+        <input type="color" id="fg-color" value="#000000">
+      </div>
+      <div class="form-group">
+        <label data-i18n="bgColor">Background</label>
+        <input type="color" id="bg-color" value="#ffffff">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generateQR()" data-i18n="btnGenerate">Generate</button>
+      <button class="btn btn-secondary" id="btn-download" onclick="downloadQR()" style="display:none" data-i18n="btnDownload">Download PNG</button>
+    </div>
+  </div>
+  <div id="qr-output"></div>
+</main>
+<footer>
+  <div class="tip-box">
+    <span data-i18n="footerTip">Tip: </span>
+    <a href="https://etherscan.io/address/0xEeD903787Cb86bcCc17777E5C7d10A4c2De43823" target="_blank" data-i18n="tipAddr">Support QRCraft</a>
+    <br><code>0xEeD903787Cb86bcCc17777E5C7d10A4c2De43823</code>
+  </div>
+  <p style="margin-top:12px" data-i18n="footerCopy">© 2026 QRCraft.</p>
+</footer>
+<script src="qrlib.js"></script>
+<script src="i18n.js"></script>
+<script>
+let lastCanvas=null;
+function generateQR(){
+  const text=document.getElementById('qr-input').value.trim();
+  if(!text)return;
+  const fg=document.getElementById('fg-color').value;
+  const bg=document.getElementById('bg-color').value;
+  const typeNumber=0;
+  const errorCorrection='M';
+  const qr=qrcode(typeNumber,errorCorrection);
+  qr.addData(text);
+  qr.make();
+  const mods=qr.getModuleCount();
+  const cellSize=Math.max(4,Math.floor(400/mods));
+  const size=mods*cellSize;
+  const canvas=document.createElement('canvas');
+  canvas.width=size;canvas.height=size;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,size,size);
+  for(let r=0;r<mods;r++){
+    for(let c=0;c<mods;c++){
+      if(qr.isDark(r,c)){ctx.fillStyle=fg;ctx.fillRect(c*cellSize,r*cellSize,cellSize,cellSize)}
+    }
+  }
+  const out=document.getElementById('qr-output');
+  out.innerHTML='';out.appendChild(canvas);
+  lastCanvas=canvas;
+  document.getElementById('btn-download').style.display='inline-flex';
+}
+function downloadQR(){
+  if(!lastCanvas)return;
+  const a=document.createElement('a');
+  a.download='qrcraft-qrcode.png';
+  a.href=lastCanvas.toDataURL('image/png');
+  a.click();
+}
+// Auto-generate on input
+let timer;
+document.getElementById('qr-input').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(generateQR,400)});
+</script>
+</body>
+</html>
